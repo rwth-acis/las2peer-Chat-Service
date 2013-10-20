@@ -2,5 +2,6 @@
 /.las2peer
 /log
 /tmp
-/service
+/lib
 /output
+/ivy/ivy.jar
