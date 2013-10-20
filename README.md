@@ -9,4 +9,4 @@ a: starts a new network at port 9010 without starting an observer (use this if y
 b-0: 9012 (connects to 9010)  
 b-1: 9013 (connects to 9010)    
 The "b" scripts have to be executed in the correct order to work properly.  
-Build Status: [![Build Status](https://api.travis-ci.org/PedeLa/LAS2peer-Chat-Service.png)](https://travis-ci.org/PedeLa/LAS2peer-Chat-Service)
+Build Status: [![Build Status](https://api.travis-ci.org/rwth-acis/LAS2peer-Chat-Service.png)](https://travis-ci.org/rwth-acis/LAS2peer-Chat-Service)
