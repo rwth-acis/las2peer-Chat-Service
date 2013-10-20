@@ -1,0 +1,99 @@
+<html>
+<head>
+    <title>LAS2peer Chat Service</title>
+    <link rel="stylesheet" type="text/css" href="css/style.css" media="all">
+    <script type="text/javascript" src="js/storage.js"></script>
+    <script type="text/javascript" src="js/lasAjaxClient.js"></script>
+    <script type="text/javascript" src="js/chatServiceLibrary.js"></script>
+    <script type="text/javascript" src="js/jquery-1.8.0.min.js"></script>
+
+	
+</head>
+<body>
+<div class="main">
+    
+    
+    <form id="cs_loginform" align="center" action="javascript:login_form_submit()">
+	<h1 >Chat Tool Login</h1>
+	<p>Please login with your LAS2<sup>peer</sup> credentials:</p>
+        <h2><label for="cs_username">Username:</label></h2>
+        <input type="text" id="cs_username" value="User A" />
+        <h2><label for="cs_password">Password:</label></h2>
+        <input type="password" id="cs_password" value="userAPass" />
+		<br><br>
+        <input style = "font-size: 1.2em;" type="submit"  value="Login!"/>
+    </form>
+	
+	
+	<div id="cs_mainView">
+		<form align = "right" id="cs_leave" action="javascript:leave_chat_room()">
+			<input style = "font-size: 1.2em;" type="submit" value="Leave Room"/>
+		</form>
+		<table style="text-align: left; width: 100%; height: 75%;" border="1" cellpadding="10" cellspacing="2">
+		  <tbody>
+			<tr style="height: 95%;">
+				<td valign="top" style="width: 75%">
+					<div id = "cs_leftSide" style="height:100%; width:100%; overflow-y:scroll;"></div>
+				</td>
+				<td valign="top">
+					<div id = "cs_rightSideUp"></div>
+					<hr>
+					<h3 align = "center">Userlist</h3>
+					<p style="font-size:65%" align="center"><i>(Click on a name to send a private message to the user)</i></p>
+					<div id ="cs_rightSideDown"></div>
+					<hr>
+					<div id = "cs_invite_user">
+						<h3 align = "center">Invite a new User<br>(use his login)</h3>
+						<form id="cs_inviteUserForm" action="javascript:invite_user_form_submit()">
+							<input style = "width:75%" type="text" id="cs_user_to_be_invited" value="" />
+							<input style = "width:20%" type="submit"  value="Invite"/>
+						</form>
+					</div>
+				</td>
+			</tr>
+		  </tbody>
+		</table>
+		<form id="cs_sendMessageForm" style="align:bottom" action="javascript:message_form_submit()">
+			<input style = "width: 40%" type="text" id="cs_message" value="" />
+			<input style = "width:9%" type="submit"  value="Post"/>
+		</form>
+	</div>
+	
+	
+	
+	<div id="cs_chatRoomSelection">
+		<form align = "right" id="cs_logout" action="javascript:logout()">
+			<input style = "font-size: 1.2em;" type="submit" value="Logout"/>
+		</form>
+		<p>Create a new chatroom. Private chatrooms can only be joined per invite:</p>
+		<form id="cs_createChatRoomForm" action="javascript:create_chat_room_form_submit()">
+			<label for="cs_chatRoomName">Chatroom Name:</label>
+			<input type="text" id="cs_chatRoomName" value="" />
+			<label for="cs_isPrivate">Private:</label>
+			<input type="checkbox" id="cs_isPrivate" value="isPrivate"/>
+			<input type="submit"  value="Create"/>
+		</form>
+		<br>
+		<h3 align= "center">Or join one of these existing chatrooms:</h3>
+		<table style="text-align: center; width: 100%; height: 50%;" border="1" cellpadding="10" cellspacing="2">
+		  <tbody>
+			<tr style="height: 95%;">
+				<td valign="top" style="width:75%">
+					<h4>Public chatrooms:</h4>
+					<div id = "cs_publicChatRoomList" style="height:40%; width:100%; overflow-y:scroll;"></div>
+					<hr>
+					<h4>Private chatrooms you were invited to:</h4>
+					<div id = "cs_privateChatRoomList" style="height:25%; width:100%; overflow-y:scroll;"></div>
+				</td>
+			</tr>
+		  </tbody>
+		</table>
+	</div>
+	
+	
+</div>
+
+
+<script type="text/javascript" src="js/chatService.js"></script>
+</body>
+</html>
