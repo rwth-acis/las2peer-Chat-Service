@@ -5,3 +5,5 @@
 /lib
 /output
 /ivy/ivy.jar
+/node-storage
+/service

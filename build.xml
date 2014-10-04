@@ -20,6 +20,7 @@
 	<property name="export.jars" location="${export}/jars" />
 	
 	<property name="lib" location="lib" />
+	<property name="service" location="service" />
 	
     <path id="libraries">
         <fileset dir="${lib}">
@@ -123,6 +124,14 @@
 				<attribute name="Library-SymbolicName" value="i5.las2peer.services.chatService" />
 			</manifest>
 		</jar>
+		<!-- Copy to service folder to enable working with L2PNodeLauncher !-->
+		<jar jarfile="${service}/i5.las2peer.services.chatService-${ChatService.version}.jar">
+			<fileset dir="${tmp.classes}" includes="i5/las2peer/services/chatService/**" />
+			<manifest>
+				<attribute name="Library-Version" value="${ChatService.version}" />
+				<attribute name="Library-SymbolicName" value="i5.las2peer.services.chatService" />
+			</manifest>
+		</jar>
 		<!-- Copy to lib folder to enable working with L2PNodeLauncher !-->
 		<jar jarfile="${lib}/i5.las2peer.services.chatService-${ChatService.version}.jar">
 			<fileset dir="${tmp.classes}" includes="i5/las2peer/services/chatService/**" />
@@ -154,7 +163,7 @@
 	</target>
 	
 	<!--   JUNIT testing -->
-	<target name="junit" depends="junit_tests, junit_clean" />
+	<target name="junit" depends="junit_tests, junit_clean" description="junit" />
 	
 	<target name="init_junit" depends="init_general">
 		<mkdir dir="${junit.report}" />
