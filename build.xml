@@ -1,11 +1,11 @@
-<project name="ChatService" default="ChatService_jar" basedir="." xmlns:ivy="antlib:org.apache.ivy.ant">
+<project name="ChatService" default="jar" basedir="." xmlns:ivy="antlib:org.apache.ivy.ant">
 	
 	<presetdef name="javac">
 		<javac includeantruntime="false" />
 	</presetdef>
 	
-	<property name="src.main" location="java" />
-	<property name="src.junit" location="junit" />
+	<property name="src.main" location="src/main" />
+	<property name="src.junit" location="src/test" />
 	
 	<property name="tmp" location="tmp" />
 	<property name="log" location="log" />
@@ -111,7 +111,7 @@
 
 	<target name="compile_all" depends="compile_main, compile_junit" />
 
-	<target name="ChatService_jar" depends="compile_main">
+	<target name="jar" depends="compile_main">
 		<property name="ChatService.version" value="0.1" />
 		<jar jarfile="${export.jars}/i5.las2peer.services.chatService-${ChatService.version}.jar">
 			<fileset dir="${tmp.classes}" includes="i5/las2peer/services/chatService/**" />
@@ -193,9 +193,9 @@
 		<delete includeemptydirs="true">
 			<fileset dir="${log}" includes="**/*"/>
 		</delete>
-		<delete dir=".las2peer" />
+		<delete dir="node-storage" />
 	</target>
 	
-	<target name="all" depends="ChatService_jar, junit, java_doc, clean" />
+	<target name="all" depends="jar, junit, java_doc, clean" />
 	
 </project>
