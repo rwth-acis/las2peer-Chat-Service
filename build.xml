@@ -139,7 +139,7 @@
 		
 	</target>
 	
-	<target name="java_doc" depends="init_doc">
+	<target name="javadoc" depends="init_doc" description="--> javadoc">
 		<javadoc destdir="${export.doc}"
 				author="true"
 				version="true"
@@ -190,12 +190,10 @@
 	<!-- general cleanup; don't run this if you want to see unit test results or logging data -->
 	<target name="clean">
 		<delete dir="${tmp}" />
-		<delete includeemptydirs="true">
-			<fileset dir="${log}" includes="**/*"/>
-		</delete>
-		<delete dir="node-storage" />
+		<delete dir="${export}" />
+		<delete dir="${lib}" />
 	</target>
 	
-	<target name="all" depends="jar, junit, java_doc, clean" />
+	<target name="all" depends="clean, jar, junit, javadoc" description="--> all" />
 	
 </project>
