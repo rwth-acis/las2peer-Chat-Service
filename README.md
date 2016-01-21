@@ -6,4 +6,4 @@ One can either connect with an "empty" node to a running LAS2peer instance hosti
 or create an own service instance, in both ways a user can join the common "chatroom"-lobby.  
 The folder scripts contains a start script.  
 
-Build Status: [![Build Status](https://api.travis-ci.org/rwth-acis/LAS2peer-Chat-Service.png)](https://travis-ci.org/rwth-acis/LAS2peer-Chat-Service)
+Travis CI: [![Build Status](https://travis-ci.org/rwth-acis/LAS2peer-Chat-Service.svg?branch=master)](https://travis-ci.org/rwth-acis/LAS2peer-Chat-Service)
