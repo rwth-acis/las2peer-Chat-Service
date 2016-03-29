@@ -2,6 +2,8 @@ package i5.las2peer.services.chatService;
 
 import i5.las2peer.api.Service;
 import i5.las2peer.communication.Message;
+import i5.las2peer.logging.L2pLogger;
+import i5.las2peer.logging.NodeObserver.Event;
 import i5.las2peer.p2p.AgentNotKnownException;
 import i5.las2peer.p2p.MessageResultListener;
 import i5.las2peer.persistency.Envelope;
@@ -17,6 +19,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+import java.util.logging.Level;
 
 
 /**
@@ -58,7 +61,7 @@ public class ChatService extends Service {
 		
 	private MessageResultListener messageResultListener = null;
 	
-	
+	private final L2pLogger logger = L2pLogger.getInstance(ChatService.class.getName());
 	/**
 	 * Constructor: Loads the property file and enables the service monitoring.
 	 */
@@ -80,10 +83,10 @@ public class ChatService extends Service {
 	public String addChatRoom(String chatRoomName, String isPrivate){
 		ChatRoom chatRoom = findChatRoom(chatRoomName);
 		if (chatRoom == null){ //Not found
-			chatRoom = new ChatRoom(chatRoomName, Boolean.valueOf(isPrivate), (UserAgent) getActiveAgent());
+			chatRoom = new ChatRoom(chatRoomName, Boolean.valueOf(isPrivate), (UserAgent) getContext().getMainAgent());
 			if(addChatRoomToNetwork(chatRoom))
 				if(addChatRoomNameToNetwork(chatRoomName)){
-					logMessage(8, getActiveAgent(), ""+chatRoomName); //User is added to new chatroom
+					logger.log(Level.INFO, ""+chatRoomName);
 					return "Chatroom " + chatRoomName + " was created!";
 				}
 			return "Problems during chatroom creation!";
@@ -104,7 +107,7 @@ public class ChatService extends Service {
 	 */
 	public String[] getChatRoomInfo(String chatRoomName){
 		String[] returnArray;
-		UserAgent requestingAgent = (UserAgent) this.getActiveAgent();
+		UserAgent requestingAgent = (UserAgent) this.getContext().getMainAgent();
 		ChatRoom chatRoom = findChatRoom(chatRoomName);
 		if(chatRoom == null){
 			returnArray = new String[1];
@@ -134,7 +137,7 @@ public class ChatService extends Service {
 	 * @return Success or error message.
 	 */
 	public String sendChatRoomMessage(String message, String chatRoomName) {
-		UserAgent sendingAgent = (UserAgent) this.getActiveAgent();
+		UserAgent sendingAgent = (UserAgent) this.getContext().getMainAgent();
 		ChatRoom chatRoom = findChatRoom(chatRoomName);
 		if(chatRoom == null){
 			return "Chatroom " + chatRoomName + " does not exist!";
@@ -144,15 +147,15 @@ public class ChatService extends Service {
 			try {
 				Long[] members = chatRoom.getMemberIdList();
 				for(int i = 0; i < members.length; i++){
-					Agent receivingAgent = getActiveNode().getAgent(members[i]);
+					Agent receivingAgent = getContext().getLocalNode().getAgent(members[i]);
 					Message toSend = new Message(sendingAgent, receivingAgent, chatRoomMessage);
-					toSend.setSendingNodeId(getActiveNode().getNodeId()); //For monitoring, otherwise sending node is not stored (Security/Privacy?)
+					toSend.setSendingNodeId(getContext().getLocalNode().getNodeId()); //For monitoring, otherwise sending node is not stored (Security/Privacy?)
 					if(messageResultListener == null || messageResultListener.isFinished()){
 						messageResultListener = new MessageResultListener(2000);
-						getActiveNode().sendMessage(toSend, messageResultListener);
-						logMessage(2, getActiveAgent(), "" + toSend.getId());
+						getContext().getLocalNode().sendMessage(toSend, messageResultListener);
+						logger.log(Level.INFO, "" + toSend.getId());
 						messageResultListener.waitForOneAnswer();
-						logMessage(10, getActiveAgent(), "" + toSend.getId());
+						logger.log(Level.INFO, "" + toSend.getId());
 					}
 					else{
 						return "Wait a little, busy!";
@@ -182,7 +185,7 @@ public class ChatService extends Service {
 	 * @return Success or error message.
 	 */
 	public String sendPrivateMessage(String message, String chatRoomName, String recipientLogin){
-		UserAgent sendingAgent = (UserAgent) this.getActiveAgent();
+		UserAgent sendingAgent = (UserAgent) this.getContext().getMainAgent();
 		ChatRoom chatRoom = findChatRoom(chatRoomName);
 		if(chatRoom == null){
 			return "Chatroom " + chatRoomName + " does not exist!";
@@ -192,15 +195,15 @@ public class ChatService extends Service {
 			try {
 				Long[] members = chatRoom.getMemberIdList();
 				for(int i = 0; i < members.length; i++){
-					Agent receivingAgent = getActiveNode().getAgent(members[i]);
+					Agent receivingAgent = getContext().getLocalNode().getAgent(members[i]);
 					if(((UserAgent) receivingAgent).getLoginName().equals(recipientLogin)){
 						Message toSend = new Message(sendingAgent, receivingAgent, chatRoomMessage);
 						//For monitoring, otherwise sending node is not stored (Security/Privacy?)
-						toSend.setSendingNodeId(getActiveNode().getNodeId());
+						toSend.setSendingNodeId(getContext().getLocalNode().getNodeId());
 						if(messageResultListener == null || messageResultListener.isFinished()){
 							messageResultListener = new MessageResultListener(2000);
-							getActiveNode().sendMessage(toSend, messageResultListener);
-							logMessage(1, getActiveAgent(), "" + toSend.getId());
+							getContext().getLocalNode().sendMessage(toSend, messageResultListener);
+							logger.log(Level.INFO, "" + toSend.getId());
 							messageResultListener.waitForOneAnswer(2000);
 						}
 						else{
@@ -233,7 +236,7 @@ public class ChatService extends Service {
 	 */
 	public String[] getMembersOfChatRoom(String chatRoomName){
 		String[] returnArray;
-		UserAgent currentAgent = (UserAgent) getActiveAgent();
+		UserAgent currentAgent = (UserAgent) getContext().getMainAgent();
 		ChatRoom chatRoom = findChatRoom(chatRoomName);
 		if(chatRoom == null){
 			returnArray = new String[1];
@@ -267,11 +270,11 @@ public class ChatService extends Service {
 		}
 		UserAgent agentToAdd;
 		try {
-			agentToAdd = (UserAgent) getActiveNode().getAgent(getActiveNode().getAgentIdForLogin(agentLogin));
+			agentToAdd = (UserAgent) getContext().getLocalNode().getAgent(getContext().getLocalNode().getAgentIdForLogin(agentLogin));
 		} catch (AgentNotKnownException e) {
 			return "There exists no agent with login " + agentLogin + "!";
 		}
-		if(agentToAdd.getId() != getActiveAgent().getId()){
+		if(agentToAdd.getId() != getContext().getMainAgent().getId()){
 			return "A user can only add himself to a chatroom. If this chatroom is private, use invite instead!";
 		}
 		if(!chatRoom.isPrivate() || chatRoom.isInvited(agentToAdd)){
@@ -281,7 +284,7 @@ public class ChatService extends Service {
 					chatRoom.setAdminId(agentToAdd.getId());
 				}
 				if(updateChatRoom(chatRoom)){
-					logMessage(8, getActiveAgent(), ""+chatRoomName);
+					logger.log(Level.INFO, ""+chatRoomName);
 					return "User with login " + agentLogin + " added!";
 				}
 			}
@@ -306,7 +309,7 @@ public class ChatService extends Service {
 	 * @return Success or error message.
 	 */
 	public String inviteUser(String chatRoomName, String agentLogin){
-		UserAgent activeAgent = (UserAgent) getActiveAgent();
+		UserAgent activeAgent = (UserAgent) getContext().getMainAgent();
 		ChatRoom chatRoom = findChatRoom(chatRoomName);
 		if(chatRoom == null){
 			return "Chatroom " + chatRoomName + " does not exist!";
@@ -314,7 +317,7 @@ public class ChatService extends Service {
 		UserAgent agentToAdd;
 		try {
 			//Please mind that an UserList update has to happen before any other node can get an agent for its login!
-			agentToAdd = (UserAgent) getActiveNode().getAgent(getActiveNode().getAgentIdForLogin(agentLogin));
+			agentToAdd = (UserAgent) getContext().getLocalNode().getAgent(getContext().getLocalNode().getAgentIdForLogin(agentLogin));
 		} catch (AgentNotKnownException e) {
 			return "There exists no agent with login " + agentLogin + "!";
 		}
@@ -350,7 +353,7 @@ public class ChatService extends Service {
 	 * @return Success or error message.
 	 */
 	public String removeMember(String chatRoomName, String agentLogin){
-		UserAgent currentAgent = (UserAgent) getActiveAgent();
+		UserAgent currentAgent = (UserAgent) getContext().getMainAgent();
 		UserAgent agentToRemove;
 		ChatRoom chatRoom = findChatRoom(chatRoomName);
 		
@@ -358,7 +361,7 @@ public class ChatService extends Service {
 			return "Chatroom " + chatRoomName + " does not exist!";
 		}
 		try {
-			agentToRemove = (UserAgent) getActiveNode().getAgent(getActiveNode().getAgentIdForLogin(agentLogin));
+			agentToRemove = (UserAgent) getContext().getLocalNode().getAgent(getContext().getLocalNode().getAgentIdForLogin(agentLogin));
 		} catch (AgentNotKnownException e) {
 			return "There exists no agent with login " + agentLogin + "!";
 		}
@@ -370,14 +373,14 @@ public class ChatService extends Service {
 				//(otherwise the next joining member will become admin)
 				if(chatRoom.getAdminId() == ((UserAgent) agentToRemove).getId() && chatRoom.getSize() != 0){
 					try {
-						Agent newAdmin = getActiveNode().getAgent(chatRoom.getMemberIdList()[0]);
+						Agent newAdmin = getContext().getLocalNode().getAgent(chatRoom.getMemberIdList()[0]);
 						chatRoom.setAdminId(newAdmin.getId());
 					} catch (AgentNotKnownException e) {
 						e.printStackTrace();
 					}
 				}
 				if(updateChatRoom(chatRoom)){
-					logMessage(9, getActiveAgent(), ""+chatRoomName);
+					logger.log(Level.INFO, ""+chatRoomName);
 					return "User Agent with login " + agentLogin + " removed!";
 				}
 			}
@@ -389,7 +392,7 @@ public class ChatService extends Service {
 		else if(chatRoom.getAdminId() == currentAgent.getId()){
 			if(chatRoom.removeMember(agentToRemove)){
 				if(updateChatRoom(chatRoom)){
-					logMessage(9, getActiveAgent(), ""+chatRoomName);
+					logger.log(Level.INFO, ""+chatRoomName);
 					return "User Agent with login " + agentLogin + " removed!";
 				}
 			}
@@ -413,7 +416,7 @@ public class ChatService extends Service {
 	 */
 	public String[] getNewChatRoomMessages(String chatRoomName){
 		String[] returnArray;
-		UserAgent requestingAgent = (UserAgent) getActiveAgent();
+		UserAgent requestingAgent = (UserAgent) getContext().getMainAgent();
 		
 		ChatRoom chatRoom = findChatRoom(chatRoomName);
 		if(chatRoom == null){
@@ -427,13 +430,13 @@ public class ChatService extends Service {
 			return returnArray;
 		}
 		 try {
-			 Mediator mediator = getActiveNode().getOrRegisterLocalMediator(requestingAgent);
+			 Mediator mediator = getContext().getLocalNode().getOrRegisterLocalMediator(requestingAgent);
 			 if(mediator.hasMessages()){
 				int messageCount = mediator.getNumberOfWaiting();
 				List<String> returnMessages = new ArrayList<String>();
 				for(int i = 0; i < messageCount; i++){
 					Message get = mediator.getNextMessage();
-					get.open(getActiveNode());
+					get.open(getContext().getLocalNode());
 					ChatRoomMessage chatRoomMessage = (ChatRoomMessage) get.getContent();
 					//This point marks a design decision: Message sending is only
 					//allowed in the current chatroom, not across chatrooms.
@@ -450,13 +453,13 @@ public class ChatService extends Service {
 							returnMessage = "<font color='#000033'>";
 						returnMessage += new SimpleDateFormat("dd/MM/yyyy, HH:mm:ss").format(chatRoomMessage.getTimestamp());
 						returnMessage += " ";
-						UserAgent sendingUser = (UserAgent) getActiveNode().getAgent(chatRoomMessage.getSendById());
+						UserAgent sendingUser = (UserAgent) getContext().getLocalNode().getAgent(chatRoomMessage.getSendById());
 						returnMessage += sendingUser.getLoginName();
 						returnMessage += ": ";
 						returnMessage += chatRoomMessage.getContent();
 						returnMessage += "</font>";
 						returnMessages.add(returnMessage);
-						logMessage(7, getActiveAgent(), ""+get.getId());
+						logger.log(Level.INFO, ""+get.getId());
 					}
 				}
 				if(!returnMessages.isEmpty()){
@@ -476,7 +479,7 @@ public class ChatService extends Service {
 			}
 		} catch (L2pSecurityException | AgentException e) {
 			e.printStackTrace();
-			logMessage("Error receiving message! Exception: " + e.toString());
+			L2pLogger.logEvent(this, Event.SERVICE_ERROR, "Error receiving message! Exception: " + e.toString());
 			returnArray = new String[1];
 			returnArray[0] = "Error receiving message! Exception: " + e.toString();
 			return returnArray;
@@ -519,7 +522,7 @@ public class ChatService extends Service {
 	 * Or an array of size one with the message, that no private chatrooms exist.
 	 */
 	public String[] getPrivateChatRooms(){
-		UserAgent requestingAgent = (UserAgent) getActiveAgent();
+		UserAgent requestingAgent = (UserAgent) getContext().getMainAgent();
 		ArrayList<String> chatRoomNames = getChatRoomNamesFromNetwork();
 		ArrayList<String> privateChatRooms = new ArrayList<String>();
 		if(chatRoomNames != null){
@@ -544,19 +547,19 @@ public class ChatService extends Service {
 	private boolean updateChatRoom(ChatRoom chatRoom) {
 		try {
 			long randomLong = new Random().nextLong(); //To be able to match chatroom search and found pairs
-			logMessage(5, getActiveAgent(), ""+randomLong);
+			logger.log(Level.INFO, ""+randomLong);
 			Envelope chatRoomEnvelope = getContext().getStoredObject(ChatRoom[].class, getEnvelopeId (chatRoom.getRoomName()));
 			chatRoomEnvelope.open(getAgent());
-			logMessage(6, getActiveAgent(), ""+randomLong);
+			logger.log(Level.INFO, ""+randomLong);
 			ChatRoom[] chatRoomArray = new ChatRoom[1];
 			chatRoomArray[0] = chatRoom;
 			chatRoomEnvelope.updateContent ( chatRoomArray );
 			chatRoomEnvelope.addSignature(getAgent());
 			chatRoomEnvelope.store();
-			logMessage("Updated chatroom " + chatRoom.getRoomName());
+			logger.log(Level.INFO, "Updated chatroom " + chatRoom.getRoomName());
 			return true;
 		} catch (Exception e) {
-			logError("Error updating chatroom! " + e);
+			L2pLogger.logEvent(this, Event.SERVICE_ERROR, "Error updating chatroom! " + e);
 			e.printStackTrace();
 			return false;
 		}
@@ -566,14 +569,14 @@ public class ChatService extends Service {
 	private ChatRoom findChatRoom(String chatRoomName) {
 		try {
 			long randomLong = new Random().nextLong(); //To be able to match chatroom search and found pairs
-			logMessage(5, getActiveAgent(), ""+randomLong);
+			logger.log(Level.INFO, ""+randomLong);
 			Envelope chatRoomEnvelope = getContext().getStoredObject(ChatRoom[].class, getEnvelopeId (chatRoomName));
 			chatRoomEnvelope.open(getAgent());
 			ChatRoom[] chatRoomArray = chatRoomEnvelope.getContent(ChatRoom[].class);
-			logMessage(6, getActiveAgent(), ""+randomLong);
+			logger.log(Level.INFO, ""+randomLong);
 			return chatRoomArray[0];
 		} catch ( Exception e ) {
-			logMessage("No chatroom with name " + chatRoomName + " exists!");
+			L2pLogger.logEvent(this, Event.SERVICE_ERROR, "No chatroom with name " + chatRoomName + " exists!");
 			return null;
 		}
 	}
@@ -589,12 +592,12 @@ public class ChatService extends Service {
 			chatRoomEnvelope.addSignature(getAgent());
 			chatRoomEnvelope.store();
 			if(chatRoom.isPrivate())
-				logMessage(3, getActiveAgent(), chatRoom.getRoomName());
+				logger.log(Level.INFO, chatRoom.getRoomName());
 			else
-				logMessage(4, getActiveAgent(), chatRoom.getRoomName());
+				logger.log(Level.INFO, chatRoom.getRoomName());
 			return true;
 		} catch (Exception e) {
-			logError("Error storing chatroom! " + e);
+			L2pLogger.logEvent(this, Event.SERVICE_ERROR, "Error storing chatroom! " + e);
 			e.printStackTrace();
 			return false;
 		}
@@ -611,7 +614,7 @@ public class ChatService extends Service {
 			chatRooms = chatRoomNamesArray[0];
 			return chatRooms;
 		} catch (Exception e) {
-			logMessage("Chatroomlist does not yet exist!");
+			L2pLogger.logEvent(this, Event.SERVICE_ERROR, "Chatroomlist does not yet exist!");
 			return null;
 		}
 	}
@@ -626,16 +629,16 @@ public class ChatService extends Service {
 			@SuppressWarnings("unchecked")
 			ArrayList<String>[] chatRoomNamesArray = new ArrayList[1];
 			chatRoomNamesArray[0] = chatRooms;
-			logMessage("Adding new chatroomlist!");
+			logger.log(Level.INFO, "Adding new chatroomlist!");
 			try {
 				Envelope knownChatRoomsEnvelope = Envelope.createClassIdEnvelope(chatRoomNamesArray, knownChatRoomsIdentifier, getAgent());
 				knownChatRoomsEnvelope.open(getAgent());
 				knownChatRoomsEnvelope.addSignature(getAgent());
 				knownChatRoomsEnvelope.store();
-				logMessage("Stored new chatroomlist!");
+				logger.log(Level.INFO, "Stored new chatroomlist!");
 				return true;
 			} catch (Exception e) {
-				logError("Error storing new chatroomlist! " + e);
+				L2pLogger.logEvent(this, Event.SERVICE_ERROR, "Error storing new chatroomlist! " + e);
 				e.printStackTrace();
 				return false;
 			}
@@ -658,10 +661,10 @@ public class ChatService extends Service {
 				knownChatRoomsEnvelope.updateContent ( chatRoomNamesArray );
 				knownChatRoomsEnvelope.addSignature(getAgent());
 				knownChatRoomsEnvelope.store();
-				logMessage("Updated chatroomlist!");
+				logger.log(Level.INFO, "Updated chatroomlist!");
 				return true;
 			} catch (Exception e) {
-				logError("Error updating chatroomlist! " + e);
+				L2pLogger.logEvent(this, Event.SERVICE_ERROR, "Error updating chatroomlist! " + e);
 				e.printStackTrace();
 				return false;
 			}

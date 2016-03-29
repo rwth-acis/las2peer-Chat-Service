@@ -1,7 +1,8 @@
 <ivy-module version="2.0">
     <info organisation="i5" module="las2peer-chatService"/>
     <dependencies>
-        <dependency org="i5" name="las2peer" rev="0.3-SNAPSHOT" changing="true" />
-        <dependency org="i5" name="i5-httpConnector" rev="0.1.6" />
+        <dependency org="i5" name="las2peer" rev="0.5-SNAPSHOT" changing="true" />
+        <dependency org="i5" name="las2peer-http-connector" rev="0.5-SNAPSHOT" changing="true" />
+		<dependency org="i5" name="las2peer-rest-mapper" rev="0.5-SNAPSHOT" changing="true" />
     </dependencies>
 </ivy-module>

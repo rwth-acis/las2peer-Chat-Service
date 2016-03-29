@@ -44,7 +44,7 @@ public class ChatServiceTest {
 		
 		node.launch();
 		
-		ServiceAgent testService = ServiceAgent.generateNewAgent(
+		ServiceAgent testService = ServiceAgent.createServiceAgent(
 				testServiceClass, "a pass");
 		testService.unlockPrivateKey("a pass");
 		
