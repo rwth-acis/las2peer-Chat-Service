@@ -3,6 +3,5 @@
     <dependencies>
         <dependency org="i5" name="las2peer" rev="0.5-SNAPSHOT" changing="true" />
         <dependency org="i5" name="las2peer-http-connector" rev="0.5-SNAPSHOT" changing="true" />
-		<dependency org="i5" name="las2peer-rest-mapper" rev="0.5-SNAPSHOT" changing="true" />
     </dependencies>
 </ivy-module>

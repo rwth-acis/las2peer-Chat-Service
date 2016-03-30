@@ -19,7 +19,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
-import java.util.logging.Level;
 
 
 /**
@@ -61,7 +60,7 @@ public class ChatService extends Service {
 		
 	private MessageResultListener messageResultListener = null;
 	
-	private final L2pLogger logger = L2pLogger.getInstance(ChatService.class.getName());
+	//private final L2pLogger logger = L2pLogger.getInstance(ChatService.class.getName());
 	/**
 	 * Constructor: Loads the property file and enables the service monitoring.
 	 */
@@ -86,7 +85,7 @@ public class ChatService extends Service {
 			chatRoom = new ChatRoom(chatRoomName, Boolean.valueOf(isPrivate), (UserAgent) getContext().getMainAgent());
 			if(addChatRoomToNetwork(chatRoom))
 				if(addChatRoomNameToNetwork(chatRoomName)){
-					logger.log(Level.INFO, ""+chatRoomName);
+					L2pLogger.logEvent(Event.SERVICE_CUSTOM_MESSAGE_8, ""+chatRoomName);
 					return "Chatroom " + chatRoomName + " was created!";
 				}
 			return "Problems during chatroom creation!";
@@ -153,9 +152,9 @@ public class ChatService extends Service {
 					if(messageResultListener == null || messageResultListener.isFinished()){
 						messageResultListener = new MessageResultListener(2000);
 						getContext().getLocalNode().sendMessage(toSend, messageResultListener);
-						logger.log(Level.INFO, "" + toSend.getId());
+						L2pLogger.logEvent(Event.SERVICE_CUSTOM_MESSAGE_2, "" + toSend.getId());
 						messageResultListener.waitForOneAnswer();
-						logger.log(Level.INFO, "" + toSend.getId());
+						L2pLogger.logEvent(Event.SERVICE_CUSTOM_MESSAGE_10, "" + toSend.getId());
 					}
 					else{
 						return "Wait a little, busy!";
@@ -203,7 +202,7 @@ public class ChatService extends Service {
 						if(messageResultListener == null || messageResultListener.isFinished()){
 							messageResultListener = new MessageResultListener(2000);
 							getContext().getLocalNode().sendMessage(toSend, messageResultListener);
-							logger.log(Level.INFO, "" + toSend.getId());
+							L2pLogger.logEvent(Event.SERVICE_CUSTOM_MESSAGE_1, "" + toSend.getId());
 							messageResultListener.waitForOneAnswer(2000);
 						}
 						else{
@@ -284,7 +283,7 @@ public class ChatService extends Service {
 					chatRoom.setAdminId(agentToAdd.getId());
 				}
 				if(updateChatRoom(chatRoom)){
-					logger.log(Level.INFO, ""+chatRoomName);
+					L2pLogger.logEvent(Event.SERVICE_CUSTOM_MESSAGE_8, ""+chatRoomName);
 					return "User with login " + agentLogin + " added!";
 				}
 			}
@@ -380,7 +379,7 @@ public class ChatService extends Service {
 					}
 				}
 				if(updateChatRoom(chatRoom)){
-					logger.log(Level.INFO, ""+chatRoomName);
+					L2pLogger.logEvent(Event.SERVICE_CUSTOM_MESSAGE_9, ""+chatRoomName);
 					return "User Agent with login " + agentLogin + " removed!";
 				}
 			}
@@ -392,7 +391,7 @@ public class ChatService extends Service {
 		else if(chatRoom.getAdminId() == currentAgent.getId()){
 			if(chatRoom.removeMember(agentToRemove)){
 				if(updateChatRoom(chatRoom)){
-					logger.log(Level.INFO, ""+chatRoomName);
+					L2pLogger.logEvent(Event.SERVICE_CUSTOM_MESSAGE_9, ""+chatRoomName);
 					return "User Agent with login " + agentLogin + " removed!";
 				}
 			}
@@ -459,7 +458,7 @@ public class ChatService extends Service {
 						returnMessage += chatRoomMessage.getContent();
 						returnMessage += "</font>";
 						returnMessages.add(returnMessage);
-						logger.log(Level.INFO, ""+get.getId());
+						L2pLogger.logEvent(Event.SERVICE_CUSTOM_MESSAGE_7, ""+get.getId());
 					}
 				}
 				if(!returnMessages.isEmpty()){
@@ -547,16 +546,16 @@ public class ChatService extends Service {
 	private boolean updateChatRoom(ChatRoom chatRoom) {
 		try {
 			long randomLong = new Random().nextLong(); //To be able to match chatroom search and found pairs
-			logger.log(Level.INFO, ""+randomLong);
+			L2pLogger.logEvent(Event.SERVICE_CUSTOM_MESSAGE_5, ""+randomLong);
 			Envelope chatRoomEnvelope = getContext().getStoredObject(ChatRoom[].class, getEnvelopeId (chatRoom.getRoomName()));
 			chatRoomEnvelope.open(getAgent());
-			logger.log(Level.INFO, ""+randomLong);
+			L2pLogger.logEvent(Event.SERVICE_CUSTOM_MESSAGE_6, ""+randomLong);
 			ChatRoom[] chatRoomArray = new ChatRoom[1];
 			chatRoomArray[0] = chatRoom;
 			chatRoomEnvelope.updateContent ( chatRoomArray );
 			chatRoomEnvelope.addSignature(getAgent());
 			chatRoomEnvelope.store();
-			logger.log(Level.INFO, "Updated chatroom " + chatRoom.getRoomName());
+			L2pLogger.logEvent(Event.SERVICE_MESSAGE, "Updated chatroom " + chatRoom.getRoomName());
 			return true;
 		} catch (Exception e) {
 			L2pLogger.logEvent(this, Event.SERVICE_ERROR, "Error updating chatroom! " + e);
@@ -569,11 +568,11 @@ public class ChatService extends Service {
 	private ChatRoom findChatRoom(String chatRoomName) {
 		try {
 			long randomLong = new Random().nextLong(); //To be able to match chatroom search and found pairs
-			logger.log(Level.INFO, ""+randomLong);
+			L2pLogger.logEvent(Event.SERVICE_CUSTOM_MESSAGE_5, ""+randomLong);
 			Envelope chatRoomEnvelope = getContext().getStoredObject(ChatRoom[].class, getEnvelopeId (chatRoomName));
 			chatRoomEnvelope.open(getAgent());
 			ChatRoom[] chatRoomArray = chatRoomEnvelope.getContent(ChatRoom[].class);
-			logger.log(Level.INFO, ""+randomLong);
+			L2pLogger.logEvent(Event.SERVICE_CUSTOM_MESSAGE_6, ""+randomLong);
 			return chatRoomArray[0];
 		} catch ( Exception e ) {
 			L2pLogger.logEvent(this, Event.SERVICE_ERROR, "No chatroom with name " + chatRoomName + " exists!");
@@ -592,9 +591,9 @@ public class ChatService extends Service {
 			chatRoomEnvelope.addSignature(getAgent());
 			chatRoomEnvelope.store();
 			if(chatRoom.isPrivate())
-				logger.log(Level.INFO, chatRoom.getRoomName());
+				L2pLogger.logEvent(Event.SERVICE_CUSTOM_MESSAGE_3, chatRoom.getRoomName());
 			else
-				logger.log(Level.INFO, chatRoom.getRoomName());
+				L2pLogger.logEvent(Event.SERVICE_CUSTOM_MESSAGE_4, chatRoom.getRoomName());
 			return true;
 		} catch (Exception e) {
 			L2pLogger.logEvent(this, Event.SERVICE_ERROR, "Error storing chatroom! " + e);
@@ -629,13 +628,13 @@ public class ChatService extends Service {
 			@SuppressWarnings("unchecked")
 			ArrayList<String>[] chatRoomNamesArray = new ArrayList[1];
 			chatRoomNamesArray[0] = chatRooms;
-			logger.log(Level.INFO, "Adding new chatroomlist!");
+			L2pLogger.logEvent(Event.SERVICE_MESSAGE, "Adding new chatroomlist!");
 			try {
 				Envelope knownChatRoomsEnvelope = Envelope.createClassIdEnvelope(chatRoomNamesArray, knownChatRoomsIdentifier, getAgent());
 				knownChatRoomsEnvelope.open(getAgent());
 				knownChatRoomsEnvelope.addSignature(getAgent());
 				knownChatRoomsEnvelope.store();
-				logger.log(Level.INFO, "Stored new chatroomlist!");
+				L2pLogger.logEvent(Event.SERVICE_MESSAGE, "Stored new chatroomlist!");
 				return true;
 			} catch (Exception e) {
 				L2pLogger.logEvent(this, Event.SERVICE_ERROR, "Error storing new chatroomlist! " + e);
@@ -661,7 +660,7 @@ public class ChatService extends Service {
 				knownChatRoomsEnvelope.updateContent ( chatRoomNamesArray );
 				knownChatRoomsEnvelope.addSignature(getAgent());
 				knownChatRoomsEnvelope.store();
-				logger.log(Level.INFO, "Updated chatroomlist!");
+				L2pLogger.logEvent(Event.SERVICE_MESSAGE, "Updated chatroomlist!");
 				return true;
 			} catch (Exception e) {
 				L2pLogger.logEvent(this, Event.SERVICE_ERROR, "Error updating chatroomlist! " + e);

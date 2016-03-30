@@ -6,6 +6,7 @@ import static org.junit.Assert.fail;
 import i5.las2peer.httpConnector.HttpConnector;
 import i5.las2peer.httpConnector.client.Client;
 import i5.las2peer.p2p.LocalNode;
+import i5.las2peer.p2p.ServiceNameVersion;
 import i5.las2peer.security.ServiceAgent;
 import i5.las2peer.security.UserAgent;
 import i5.las2peer.testing.MockAgentFactory;
@@ -29,7 +30,8 @@ public class ChatServiceTest {
 	
 	private static final String adamsPass = "adamspass";
 	private static final String evesPass = "evespass";
-	private static final String testServiceClass = "i5.las2peer.services.chatService.ChatService";
+	private static final ServiceNameVersion testServiceClass = new ServiceNameVersion(ChatService.class.getCanonicalName(),"0.1");
+
 	
 	@Before
 	public void startServer() throws Exception {
@@ -38,14 +40,15 @@ public class ChatServiceTest {
 		
 		adam = MockAgentFactory.getAdam();
 		eve  = MockAgentFactory.getEve();
-		
+		adam.unlockPrivateKey(adamsPass);
+		eve.unlockPrivateKey(evesPass);
 		node.storeAgent(adam);
 		node.storeAgent(eve);
 		
 		node.launch();
 		
 		ServiceAgent testService = ServiceAgent.createServiceAgent(
-				testServiceClass, "a pass");
+				testServiceClass.getName(), "a pass");
 		testService.unlockPrivateKey("a pass");
 		
 		node.registerReceiver(testService);
@@ -85,13 +88,13 @@ public class ChatServiceTest {
 		try {
 			c.connect();
 			
-			Object result = c.invoke(testServiceClass, "addChatRoom","TestChatRoom", "false");
+			Object result = c.invoke(testServiceClass.getName(), "addChatRoom","TestChatRoom", "false");
 			assertEquals("Chatroom TestChatRoom was created!", result);
 			
-			result = c.invoke(testServiceClass, "addChatRoom","TestChatRoom", "false");
+			result = c.invoke(testServiceClass.getName(), "addChatRoom","TestChatRoom", "false");
 			assertEquals("Chatroom name TestChatRoom was already taken!", result);
 			
-			result = c.invoke(testServiceClass, "addChatRoom","TestChatRoom2", "true");
+			result = c.invoke(testServiceClass.getName(), "addChatRoom","TestChatRoom2", "true");
 			assertEquals("Chatroom TestChatRoom2 was created!", result);
 			
 			c.disconnect();
@@ -106,20 +109,20 @@ public class ChatServiceTest {
 		
 		try {
 		
-		Object result = c.invoke(testServiceClass, "getChatRoomInfo","TestChatRoom");
+		Object result = c.invoke(testServiceClass.getName(), "getChatRoomInfo","TestChatRoom");
 		String[] resultArray = (String[]) result;
 		assertEquals(3, resultArray.length);
 		assertEquals("TestChatRoom", resultArray[0]);
 		assertEquals("adam", resultArray[1]);
 		assertEquals("public" , resultArray[2]);
 		
-		result = c.invoke(testServiceClass, "getChatRoomInfo","TestChatRoom2");
+		result = c.invoke(testServiceClass.getName(), "getChatRoomInfo","TestChatRoom2");
 		resultArray = (String[]) result;
 		assertEquals(1, resultArray.length);
 		assertEquals("Chatroom TestChatRoom2 is private!", resultArray[0]);
 		c.disconnect();
 		
-		result = c.invoke(testServiceClass, "getChatRoomInfo","TestChatRoom3");
+		result = c.invoke(testServiceClass.getName(), "getChatRoomInfo","TestChatRoom3");
 		resultArray = (String[]) result;
 		assertEquals(1, resultArray.length);
 		assertEquals("Chatroom TestChatRoom3 does not exist!", resultArray[0]);
@@ -141,16 +144,16 @@ public class ChatServiceTest {
 		try {
 			c.connect();
 
-			Object result = c.invoke(testServiceClass, "addChatRoom","TestChatRoom", "false");
+			Object result = c.invoke(testServiceClass.getName(), "addChatRoom","TestChatRoom", "false");
 			assertEquals("Chatroom TestChatRoom was created!", result);
 			
-			result = c.invoke(testServiceClass, "addChatRoom","TestChatRoom2", "true");
+			result = c.invoke(testServiceClass.getName(), "addChatRoom","TestChatRoom2", "true");
 			assertEquals("Chatroom TestChatRoom2 was created!", result);
 			
-			result = c.invoke(testServiceClass, "addChatRoom","TestChatRoom3", "true");
+			result = c.invoke(testServiceClass.getName(), "addChatRoom","TestChatRoom3", "true");
 			assertEquals("Chatroom TestChatRoom3 was created!", result);
 			
-			result = c.invoke(testServiceClass, "inviteUser", "TestChatRoom3", eve.getLoginName());
+			result = c.invoke(testServiceClass.getName(), "inviteUser", "TestChatRoom3", eve.getLoginName());
 			assertEquals("User with login eve1st invited!", result);
 			
 			c.disconnect();
@@ -168,20 +171,20 @@ public class ChatServiceTest {
 		
 		try {
 		
-		Object result = c.invoke(testServiceClass, "addMember", "TestChatRoom", eve.getLoginName());
+		Object result = c.invoke(testServiceClass.getName(), "addMember", "TestChatRoom", eve.getLoginName());
 		assertEquals("User with login eve1st added!", result);
 		
-		result = c.invoke(testServiceClass, "getChatRoomInfo","TestChatRoom");
+		result = c.invoke(testServiceClass.getName(), "getChatRoomInfo","TestChatRoom");
 		String[] resultArray = (String[]) result;
 		assertEquals(3, resultArray.length);
 		assertEquals("TestChatRoom", resultArray[0]);
 		assertEquals("adam", resultArray[1]);
 		assertEquals("public" , resultArray[2]);
 		
-		result = c.invoke(testServiceClass, "addMember", "TestChatRoom2", eve.getLoginName());
+		result = c.invoke(testServiceClass.getName(), "addMember", "TestChatRoom2", eve.getLoginName());
 		assertEquals("This chatroom is private, you have to be invited!", result);		
 		
-		result = c.invoke(testServiceClass, "addMember", "TestChatRoom3", eve.getLoginName());
+		result = c.invoke(testServiceClass.getName(), "addMember", "TestChatRoom3", eve.getLoginName());
 		assertEquals("User with login eve1st added!", result);		
 		
 		c.disconnect();
@@ -211,23 +214,23 @@ public class ChatServiceTest {
 			//4. add a message to the first chatroom (success)
 			//5. add another message to the first chatroom (success)
 			//6. fetch first chatroom messages (success)
-			Object result = c.invoke(testServiceClass, "addChatRoom","TestChatRoom", "false");
+			Object result = c.invoke(testServiceClass.getName(), "addChatRoom","TestChatRoom", "false");
 			assertEquals("Chatroom TestChatRoom was created!", result);
 			
-			result = c.invoke(testServiceClass, "addChatRoom","TestChatRoom2", "false");
+			result = c.invoke(testServiceClass.getName(), "addChatRoom","TestChatRoom2", "false");
 			assertEquals("Chatroom TestChatRoom2 was created!", result);
 			
-			result = c2.invoke(testServiceClass, "addMember", "TestChatRoom", eve.getLoginName());
+			result = c2.invoke(testServiceClass.getName(), "addMember", "TestChatRoom", eve.getLoginName());
 			assertEquals("User with login eve1st added!", result);
 			
-			result = c.invoke(testServiceClass, "sendChatRoomMessage", "Hello World!", "TestChatRoom");
+			result = c.invoke(testServiceClass.getName(), "sendChatRoomMessage", "Hello World!", "TestChatRoom");
 			assertEquals("Message sent!", result);
 			
-			result = c.invoke(testServiceClass, "sendChatRoomMessage", "another message", "TestChatRoom");
+			result = c.invoke(testServiceClass.getName(), "sendChatRoomMessage", "another message", "TestChatRoom");
 			assertEquals("Message sent!", result);
 			Thread.sleep(2000); //To ensure that message sending has finished
 			
-			result = c.invoke(testServiceClass, "getNewChatRoomMessages", "TestChatRoom");
+			result = c.invoke(testServiceClass.getName(), "getNewChatRoomMessages", "TestChatRoom");
 			String[] resultArray = (String[]) result;
 			assertEquals(2, resultArray.length);
 			assertTrue(resultArray[0].contains("Hello World!"));
@@ -244,18 +247,18 @@ public class ChatServiceTest {
 		//1. try to fetch the messages of the first chatroom (success)
 		//2. Fetch the messages again (fail)
 		//3. try to fetch a message of the second chatroom (fail)
-		Object result = c2.invoke(testServiceClass, "getNewChatRoomMessages", "TestChatRoom");
+		Object result = c2.invoke(testServiceClass.getName(), "getNewChatRoomMessages", "TestChatRoom");
 		String[] resultArray = (String[]) result;
 		assertEquals(2, resultArray.length);
 		assertTrue(resultArray[0].contains("Hello World!"));
 		assertTrue(resultArray[1].contains("another message"));
 		
-		result = c2.invoke(testServiceClass, "getNewChatRoomMessages", "TestChatRoom");
+		result = c2.invoke(testServiceClass.getName(), "getNewChatRoomMessages", "TestChatRoom");
 		resultArray =(String[]) result;
 		assertEquals(1, resultArray.length);
 		assertEquals("No new messages!", resultArray[0]);
 		
-		result = c2.invoke(testServiceClass, "getNewChatRoomMessages", "TestChatRoom2");
+		result = c2.invoke(testServiceClass.getName(), "getNewChatRoomMessages", "TestChatRoom2");
 		resultArray = (String[]) result;
 		assertEquals(1, resultArray.length);
 		assertEquals("You are no member of chatroom TestChatRoom2!", resultArray[0]);
@@ -281,15 +284,15 @@ public class ChatServiceTest {
 		try {
 			c.connect();
 			
-			Object result = c.invoke(testServiceClass, "getPublicChatRooms");
+			Object result = c.invoke(testServiceClass.getName(), "getPublicChatRooms");
 			String[] resultArray =(String[]) result;
 			assertEquals(resultArray.length, 1);
 			assertEquals("No public chatrooms created yet!", resultArray[0]);
 			
-			result = c.invoke(testServiceClass, "addChatRoom","TestChatRoom", "false");
+			result = c.invoke(testServiceClass.getName(), "addChatRoom","TestChatRoom", "false");
 			assertEquals("Chatroom TestChatRoom was created!", result);
 			
-			result = c.invoke(testServiceClass, "getPublicChatRooms");
+			result = c.invoke(testServiceClass.getName(), "getPublicChatRooms");
 			resultArray = (String[]) result;
 			assertEquals(resultArray.length, 1);
 			assertEquals("TestChatRoom", resultArray[0]);
